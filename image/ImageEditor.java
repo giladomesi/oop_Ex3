@@ -57,14 +57,14 @@ public class ImageEditor {
      * @param image
      * @return double
      */
-    public double getBrightness(Image image) {
+    public float getBrightness(Image image) {
         int sum = 0;
         for (int y = 0; y < image.getHeight(); y++) {
             for (int x = 0; x < image.getWidth(); x++) {
                 sum += greyScale(image.getPixel(x, y));
             }
         }
-        return sum / (image.getWidth() * image.getHeight() * maxBrightness);
+        return (float) sum / (image.getWidth() * image.getHeight() * maxBrightness);
     }
 
     /**
@@ -78,12 +78,12 @@ public class ImageEditor {
     public Image[][] getRepixelatedImage(Image image, int resolution) {
 
         int newWidth = image.getWidth() / resolution;
-        int newHeight = newWidth;
+        int yResolution = image.getHeight()/newWidth;
 
-        Image[][] repixelatedImage = new Image[newHeight][newWidth];
+        Image[][] repixelatedImage = new Image[resolution][yResolution];
 
-        for (int y = 0; y < newHeight; y++) {
-            for (int x = 0; x < newWidth; x++) {
+        for (int y = 0; y < yResolution; y++) {
+            for (int x = 0; x < resolution; x++) {
                 repixelatedImage[y][x] = getSubImage(x, y, newWidth, image);
             }
         }
