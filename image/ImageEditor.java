@@ -84,7 +84,7 @@ public class ImageEditor {
 
         for (int y = 0; y < yResolution; y++) {
             for (int x = 0; x < resolution; x++) {
-                repixelatedImage[y][x] = getSubImage(x, y, newWidth, image);
+                repixelatedImage[x][y] = getSubImage(x, y, newWidth, image);
             }
         }
 
