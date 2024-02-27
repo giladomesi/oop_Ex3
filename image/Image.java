@@ -1,46 +1,69 @@
 package image;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 
 /**
- * Facade for the image module and an interface representing an image.
- *
+ * A package-private class of the package image.
  * @author Dan Nirel
  */
-public interface Image {
-    Color getPixel(int x, int y);
+public class Image {
 
-    int getWidth();
+    private final Color[][] pixelArray;
+    private final int width;
+    private final int height;
 
-    int getHeight();
+    public Image(String filename) throws IOException {
+        BufferedImage im = ImageIO.read(new File(filename));
+        width = im.getWidth();
+        height = im.getHeight();
 
-    /**
-     * Open an image from file. Each dimensions of the returned image is guaranteed
-     * to be a power of 2, but the dimensions may be different.
-     *
-     * @param filename a path to an image file on disk
-     * @return an object implementing Image if the operation was successful,
-     * null otherwise
-     */
-    static Image fromFile(String filename) {
-        try {
-            return new FileImage(filename);
-        } catch (IOException ioe) {
-            return null;
+
+        pixelArray = new Color[height][width];
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                pixelArray[i][j]=new Color(im.getRGB(j, i));
+            }
         }
     }
 
-    /**
-     * Allows iterating the pixels' colors by order (first row, second row and so on).
-     *
-     * @return an Iterable<Color> that can be traversed with a foreach loop
-     */
-    default Iterable<Color> pixels() {
-        return new ImageIterableProperty<>(
-                this, this::getPixel);
+    public Image(Color[][] pixelArray, int width, int height) {
+        this.pixelArray = pixelArray;
+        this.width = width;
+        this.height = height;
     }
 
-    public Image[][] getRepixelatedImage(int pixelSize);
-//    public Image getSubImage(int x, int y, int size);
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public Color getPixel(int x, int y) {
+        return pixelArray[x][y];
+    }
+
+    public void saveImage(String fileName){
+        // Initialize BufferedImage, assuming Color[][] is already properly populated.
+        BufferedImage bufferedImage = new BufferedImage(pixelArray[0].length, pixelArray.length,
+                BufferedImage.TYPE_INT_RGB);
+        // Set each pixel of the BufferedImage to the color from the Color[][].
+        for (int x = 0; x < pixelArray.length; x++) {
+            for (int y = 0; y < pixelArray[x].length; y++) {
+                bufferedImage.setRGB(y, x, pixelArray[x][y].getRGB());
+            }
+        }
+        File outputfile = new File(fileName+".jpeg");
+        try {
+            ImageIO.write(bufferedImage, "jpeg", outputfile);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }
