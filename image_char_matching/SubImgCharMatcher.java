@@ -10,9 +10,10 @@ import java.util.Map;
  */
 public class SubImgCharMatcher {
 
-    public char[] charSet;
-    private final int minBrightness = 0;
-    private final int maxBrightness = 255;
+    private char[] charSet;
+    private Map<Character, Double> brightnessMap;
+    private double minBrightness;
+    private double maxBrightness;
 
     /**
      * 
@@ -22,6 +23,7 @@ public class SubImgCharMatcher {
      */
     public SubImgCharMatcher(char[] charset) {
         this.charSet = charset;
+        brightnessMap = new HashMap<>();
     }
 
     /**
@@ -48,7 +50,19 @@ public class SubImgCharMatcher {
         System.arraycopy(charSet, 0, newCharSet, 0, charSet.length);
         newCharSet[charSet.length] = c;
         charSet = newCharSet;
+        addCharToMap(c);
     }
+
+    private void addCharToMap(char c) {
+        double newBrightness = getBrightness(c);
+        brightnessMap.put(c, newBrightness);
+        if (newBrightness < minBrightness){
+            minBrightness = newBrightness;
+        } else if (newBrightness > maxBrightness){
+            maxBrightness = newBrightness;
+        }
+    }
+
 
     /**
      * 
@@ -65,6 +79,7 @@ public class SubImgCharMatcher {
             }
         }
         charSet = newCharSet;
+
     }
 
     // Brightness values for a single character, based on the noolean array.
@@ -83,20 +98,16 @@ public class SubImgCharMatcher {
 
     // Order the characters by brightness
     private void orderCharsByBrightness(char[] charSet) {
-        Map<Character, Double> brightnessMap = new HashMap<>();
-
         // Iterate through the charSet and calculate brightness
         for (int i = 0; i < charSet.length; i++) {
             char c = charSet[i];
             if (!brightnessMap.containsKey(c)) {
-                brightnessMap.put(c, getBrightness(c));
+                addCharToMap(c);
             }
             double brightness = brightnessMap.get(c);
-
             // Use a temporary variable to avoid modifying the original charSet during
             // sorting
             char temp = charSet[i];
-
             // Find the insertion position based on the brightness
             int j = i - 1;
             while (j >= 0 && brightnessMap.get(charSet[j]) > brightness) {

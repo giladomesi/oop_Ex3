@@ -114,7 +114,7 @@ public class ImageEditor {
 
         for (int y = 0; y < imHeight; y++) {
             for (int x = 0; x < imWidth; x++) {
-                int rgb = image.getPixel(x, y).getRGB();
+                int rgb = image.getPixel(y, x).getRGB();
                 pixelArray[y + paddingHeight][x + paddingWidth] = new Color(rgb, true);
             }
         }
