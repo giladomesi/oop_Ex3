@@ -11,14 +11,15 @@ import java.io.IOException;
  */
 public class AsciiArtAlgorithm {
 
-    private Image image;
-    private char[] charSet;
-    private int resolution;
+    private final Image image;
+    private final int resolution;
 
-    public AsciiArtAlgorithm(Image image, char[] charSet, int resolution) throws IOException {
+    private final SubImgCharMatcher subImgCharMatcher;
+
+    public AsciiArtAlgorithm(Image image, int resolution, SubImgCharMatcher subImgCharMatcher) throws IOException {
         this.image = image;
-        this.charSet = charSet;
         this.resolution = resolution;
+        this.subImgCharMatcher = subImgCharMatcher;
     }
 
     /**
@@ -30,7 +31,6 @@ public class AsciiArtAlgorithm {
     public char[][] run() {
 
         ImageEditor imageEditor = new ImageEditor();
-        SubImgCharMatcher subImgCharMatcher = new SubImgCharMatcher(charSet);
         Image paddedImage = imageEditor.paddImage(image);
         Image[][] repixelatedImage = imageEditor.getRepixelatedImage(paddedImage, resolution);
         char[][] asciiArt = new char[repixelatedImage.length][repixelatedImage[0].length];

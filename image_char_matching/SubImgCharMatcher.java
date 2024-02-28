@@ -15,6 +15,7 @@ public class SubImgCharMatcher {
     private double minBrightness;
     private double maxBrightness;
 
+
     /**
      * 
      * Constructor for the SubImgCharMatcher class.
@@ -24,6 +25,14 @@ public class SubImgCharMatcher {
     public SubImgCharMatcher(char[] charset) {
         this.charSet = charset;
         brightnessMap = new HashMap<>();
+    }
+
+    /**
+     * Getter for the char set.
+     * @return char set
+     */
+    public char[] getCharSet() {
+        return charSet;
     }
 
     /**
@@ -73,12 +82,21 @@ public class SubImgCharMatcher {
     public void removeChar(char c) {
         char[] newCharSet = new char[charSet.length - 1];
         int j = 0;
+        boolean cFound = false;
         for (char c1 : charSet) {
             if (c1 != c) {
+                if (j+1>=newCharSet.length)
+                {
+                    break;
+                }
                 newCharSet[j++] = c1;
+            } else {
+                cFound = true;
             }
         }
-        charSet = newCharSet;
+        if (cFound) {
+            charSet = newCharSet;
+        }
 
     }
 
