@@ -32,21 +32,33 @@ public class Shell {
     private static final int COMMAND_ASCII_ART = 7;
     private static final int CHANGE_COMMANDS_LENGTH = 2;
     private static final int INITIAL_MAX_ASCII_CHAR = 10;
+    private static final int MULTI_CHAR_REMOVAL_LENGTH = 3;
+    private static final int RES_MULTIPLIER = 2;
 
     private static final String[] COMMANDS = {"exit", "chars", "add", "remove", "res",
             "image", "output", "asciiArt"};
     private static final String[] SPECIAL_COMMANDS = {"all", "space"};
     private static final String[] RESOLUTION_CHANGE = {"up", "down"};
-    private static final Map<String, String> ERROR_MESSAGES = Map.of(
-            "add", "Did not add due to incorrect format",
-            "remove", "Did not remove due to incorrect format",
-            "res", "Did not change resolution due to incorrect format.",
-            "image", "Did not execute due to problem with image file.",
-            "output", "Did not change output method due to incorrect format.",
-            "boundaries", "Did not change due to exceeding boundaries",
-            "asciiArt", "Did not execute. Charset is empty."
+    private static final String CONSOLE_COMMAND = "console";
+    private static final String HTML_COMMAND = "html";
+    private static final int ADD_ERROR = 0;
+    private static final int REMOVE_ERROR = 1;
+    private static final int RES_ERROR = 2;
+    private static final int IMAGE_ERROR = 3;
+    private static final int OUTPUT_ERROR = 4;
+    private static final int BOUNDARIES_ERROR = 5;
+    private static final int ASCII_ART_ERROR = 6;
+    private static final Map<Integer, String> ERROR_MESSAGES = Map.of(
+            ADD_ERROR, "Did not add due to incorrect format",
+            REMOVE_ERROR, "Did not remove due to incorrect format",
+            RES_ERROR, "Did not change resolution due to incorrect format.",
+            IMAGE_ERROR, "Did not execute due to problem with image file.",
+            OUTPUT_ERROR, "Did not change output method due to incorrect format.",
+            BOUNDARIES_ERROR, "Did not change due to exceeding boundaries",
+            ASCII_ART_ERROR, "Did not execute. Charset is empty."
     );
     private static final String RESOLUTION_SETTER_MESSAGE = "Resolution set to ";
+    private static final String INVALID_COMMAND_MESSAGE = "Invalid command.";
     private static final String HTML_FILE_NAME = "out.html";
     private static final String FONT_NAME = "Courier New";
     private int minCharsInRow;
@@ -80,7 +92,6 @@ public class Shell {
     /**
      * Run command for the shell,
      * recieves different commands and acts accordingly.
-     * @throws IOException
      */
     public void run()  {
         boolean isActive = true;
@@ -90,36 +101,17 @@ public class Shell {
             String command = inputs[0];
             try {
                 switch (getCommandIndex(command)) {
-                    case COMMAND_EXIT:
-                        isActive = false;
-                        break;
-                    case COMMAND_CHARS:
-                        System.out.println(subImgCharMatcher.getCharSet());
-                        break;
+                    case COMMAND_EXIT: isActive = false; break;
+                    case COMMAND_CHARS: System.out.println(subImgCharMatcher.getCharSet()); break;
                     case COMMAND_ADD:
-                    case COMMAND_REMOVE:
-                        handleAddRemoveCommand(inputs, command);
-                        break;
-                    case COMMAND_RES:
-                        handleResolutionChange(inputs);
-                        break;
-                    case COMMAND_IMAGE:
-                        handleImageChange(inputs);
-                        break;
-                    case COMMAND_OUTPUT:
-                        handleOutputChange(inputs);
-                        break;
-                    case COMMAND_ASCII_ART:
-                        generateAsciiArt();
-                        break;
-                    default:
-                        System.out.println("Invalid command.");
+                    case COMMAND_REMOVE: handleAddRemoveCommand(inputs, command); break;
+                    case COMMAND_RES: handleResolutionChange(inputs); break;
+                    case COMMAND_IMAGE: handleImageChange(inputs); break;
+                    case COMMAND_OUTPUT: handleOutputChange(inputs); break;
+                    case COMMAND_ASCII_ART: generateAsciiArt(); break;
+                    default: System.out.println(INVALID_COMMAND_MESSAGE);
                 }
-            } catch (EmptyCharSetException | BoundariesException | IOException | FormatException e)
-            {
-                System.out.println(e.getMessage());
-            }
-
+            } catch (Exception e) { System.out.println(e.getMessage()); }
         }
     }
     private int getCommandIndex(String command) {
@@ -134,7 +126,7 @@ public class Shell {
     private void generateAsciiArt() throws EmptyCharSetException {
         if (subImgCharMatcher.getCharSet().length ==0)
         {
-            throw new EmptyCharSetException(ERROR_MESSAGES.get("asciiArt"));
+            throw new EmptyCharSetException(ERROR_MESSAGES.get(ASCII_ART_ERROR));
         }
         char[][] asciiArt = asciiArtAlgo.run();
         if (isConsole) {
@@ -145,13 +137,14 @@ public class Shell {
     }
 
     private void handleAddRemoveCommand(String[] inputs, String command) throws FormatException {
+        boolean isRemove = command.equals(COMMANDS[COMMAND_REMOVE]);
+        int error =isRemove? REMOVE_ERROR:ADD_ERROR;
         if (inputs.length != CHANGE_COMMANDS_LENGTH) {
-            throw new FormatException(ERROR_MESSAGES.get(command));
+            throw new FormatException(ERROR_MESSAGES.get(error));
         }
         String parameter = inputs[CHANGE_COMMANDS_LENGTH-1];
-        boolean isRemove = command.equals(COMMANDS[COMMAND_REMOVE]);
         if (!addRemoveFunction(parameter, isRemove)) {
-            throw new FormatException(ERROR_MESSAGES.get(command));
+            throw new FormatException(ERROR_MESSAGES.get(error));
         }
     }
 
@@ -161,7 +154,7 @@ public class Shell {
         {
             updateRes(inputs[1]);
         } else {
-            throw new FormatException(ERROR_MESSAGES.get(inputs[0]));
+            throw new FormatException(ERROR_MESSAGES.get(RES_ERROR));
         }
     }
 
@@ -174,25 +167,25 @@ public class Shell {
                 charsInRow = Math.max(Math.min(INITIAL_CHARS_IN_ROW, maxCharsInRow), minCharsInRow);
                 asciiArtAlgo = new AsciiArtAlgorithm(img, charsInRow, subImgCharMatcher);
             } catch (IOException e) {
-                throw new IOException(ERROR_MESSAGES.get("image"));
+                throw new IOException(ERROR_MESSAGES.get(IMAGE_ERROR));
             }
         } else {
-            throw new FormatException(ERROR_MESSAGES.get("image"));
+            throw new FormatException(ERROR_MESSAGES.get(IMAGE_ERROR));
         }
     }
 
     private void handleOutputChange(String[] inputs) throws FormatException {
         if (inputs.length == CHANGE_COMMANDS_LENGTH) {
-            if (Objects.equals(inputs[1], "console")) {
+            if (Objects.equals(inputs[1], CONSOLE_COMMAND)) {
                 isConsole = true;
-            } else if (Objects.equals(inputs[1], "html")) {
+            } else if (Objects.equals(inputs[1], HTML_COMMAND)) {
                 isConsole = false;
             } else {
-                throw new FormatException(ERROR_MESSAGES.get("output"));
+                throw new FormatException(ERROR_MESSAGES.get(OUTPUT_ERROR));
 
             }
         } else {
-            throw new FormatException(ERROR_MESSAGES.get("output"));
+            throw new FormatException(ERROR_MESSAGES.get(OUTPUT_ERROR));
         }
     }
 
@@ -200,15 +193,15 @@ public class Shell {
         minCharsInRow = Math.max(1, img.getWidth() / img.getHeight());
         maxCharsInRow = img.getWidth();
         if (change.equals(RESOLUTION_CHANGE[0])) {
-            if (charsInRow * 2 > maxCharsInRow) {
-                throw new BoundariesException(ERROR_MESSAGES.get("boundaries"));
+            if (charsInRow * RES_MULTIPLIER > maxCharsInRow) {
+                throw new BoundariesException(ERROR_MESSAGES.get(BOUNDARIES_ERROR));
             }
-            charsInRow = charsInRow * 2;
+            charsInRow = charsInRow * RES_MULTIPLIER;
         } else if (change.equals(RESOLUTION_CHANGE[1])) {
-            if (charsInRow / 2 < minCharsInRow) {
-                throw new BoundariesException(ERROR_MESSAGES.get("boundaries"));
+            if (charsInRow / RES_MULTIPLIER < minCharsInRow) {
+                throw new BoundariesException(ERROR_MESSAGES.get(BOUNDARIES_ERROR));
             }
-            charsInRow = Math.max(charsInRow / 2, minCharsInRow);
+            charsInRow = Math.max(charsInRow / RES_MULTIPLIER, minCharsInRow);
         }
         System.out.println(RESOLUTION_SETTER_MESSAGE + charsInRow);
         asciiArtAlgo = new AsciiArtAlgorithm(img, charsInRow, subImgCharMatcher);
@@ -217,7 +210,8 @@ public class Shell {
     private boolean addRemoveFunction(String c, boolean isRemove) {
         if (c.equals(SPECIAL_COMMANDS[0])) {
             if (isRemove) {
-                for (int i = MIN_ASCII_CHAR; i < MAX_ASCII_CHAR; i++) subImgCharMatcher.removeChar((char) i);
+                for (int i = MIN_ASCII_CHAR; i < MAX_ASCII_CHAR; i++)
+                    subImgCharMatcher.removeChar((char) i);
             } else addAll();
             return true;
         }
@@ -225,8 +219,8 @@ public class Shell {
             addRemoveChar(c.charAt(0), isRemove);
             return true;
         }
-        if (c.length() == 3 && c.charAt(1) == '-') {
-            char start = c.charAt(0), end = c.charAt(2);
+        if (c.length() == MULTI_CHAR_REMOVAL_LENGTH && c.charAt(1) == '-') {
+            char start = c.charAt(0), end = c.charAt(MULTI_CHAR_REMOVAL_LENGTH-1);
             if (start > end) { char tmp = start; start = end; end = tmp; }
             for (char i = start; i <= end; i++) addRemoveChar(i, isRemove);
             return true;
