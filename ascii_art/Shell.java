@@ -84,7 +84,7 @@ public class Shell {
         minCharsInRow = Math.max(1, img.getWidth() / img.getHeight());
         maxCharsInRow = img.getWidth();
         charsInRow = Math.max(Math.min(INITIAL_CHARS_IN_ROW, maxCharsInRow), minCharsInRow);
-        isConsole = false;
+        isConsole = true;
 
         asciiArtAlgo = new AsciiArtAlgorithm(img, charsInRow, subImgCharMatcher);
     }
