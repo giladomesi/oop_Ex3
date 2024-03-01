@@ -11,15 +11,27 @@ import java.io.IOException;
  */
 public class AsciiArtAlgorithm {
 
-    private final Image image;
-    private final int resolution;
-
+    private final float[][] brightness;
     private final SubImgCharMatcher subImgCharMatcher;
 
-    public AsciiArtAlgorithm(Image image, int resolution, SubImgCharMatcher subImgCharMatcher) throws IOException {
-        this.image = image;
-        this.resolution = resolution;
+    /**
+     * Constructor for the algorithm, assumes that the image won't be
+     * updated without creating a n ew algorithm.
+     * @param image
+     * @param resolution
+     * @param subImgCharMatcher
+     */
+    public AsciiArtAlgorithm(Image image, int resolution, SubImgCharMatcher subImgCharMatcher)  {
         this.subImgCharMatcher = subImgCharMatcher;
+        ImageEditor imageEditor = new ImageEditor();
+        image = imageEditor.paddImage(image);
+        Image[][] repixelatedImage = imageEditor.getRepixelatedImage(image, resolution);
+        this.brightness = new float[repixelatedImage.length][repixelatedImage[0].length];
+        for (int x = 0; x < repixelatedImage.length; x++) {
+            for (int y = 0; y < repixelatedImage[0].length; y++) {
+                brightness[x][y] = imageEditor.getBrightness(repixelatedImage[x][y]);
+            }
+        }
     }
 
     /**
@@ -30,14 +42,10 @@ public class AsciiArtAlgorithm {
      */
     public char[][] run() {
 
-        ImageEditor imageEditor = new ImageEditor();
-        Image paddedImage = imageEditor.paddImage(image);
-        Image[][] repixelatedImage = imageEditor.getRepixelatedImage(paddedImage, resolution);
-        char[][] asciiArt = new char[repixelatedImage.length][repixelatedImage[0].length];
-        for (int x = 0; x < repixelatedImage.length; x++) {
-            for (int y = 0; y < repixelatedImage[0].length; y++) {
-                double brightness = imageEditor.getBrightness(repixelatedImage[x][y]);
-                asciiArt[x][y] = subImgCharMatcher.getCharByImageBrightness(brightness);
+        char[][] asciiArt= new char[brightness.length][brightness[0].length];
+        for (int x = 0; x < brightness.length; x++) {
+            for (int y = 0; y < brightness[0].length; y++) {
+                asciiArt[x][y] = subImgCharMatcher.getCharByImageBrightness(brightness[x][y]);
             }
         }
         return asciiArt;
