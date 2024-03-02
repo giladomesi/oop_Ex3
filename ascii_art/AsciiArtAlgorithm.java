@@ -24,7 +24,6 @@ public class AsciiArtAlgorithm {
     public AsciiArtAlgorithm(Image image, int resolution, SubImgCharMatcher subImgCharMatcher)  {
         this.subImgCharMatcher = subImgCharMatcher;
         ImageEditor imageEditor = new ImageEditor();
-        image = imageEditor.paddImage(image);
         Image[][] repixelatedImage = imageEditor.getRepixelatedImage(image, resolution);
         this.brightness = new float[repixelatedImage.length][repixelatedImage[0].length];
         for (int x = 0; x < repixelatedImage.length; x++) {

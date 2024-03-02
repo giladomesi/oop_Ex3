@@ -6,6 +6,7 @@ import exceptions.BoundariesException;
 import exceptions.EmptyCharSetException;
 import exceptions.FormatException;
 import image.Image;
+import image.ImageEditor;
 import image_char_matching.SubImgCharMatcher;
 
 import java.io.IOException;
@@ -65,6 +66,7 @@ public class Shell {
     private int maxCharsInRow;
     private int charsInRow;
     private Image img;
+    private final ImageEditor imageEditor;
     private final SubImgCharMatcher subImgCharMatcher;
     private boolean isConsole;
 
@@ -79,7 +81,9 @@ public class Shell {
         for (int i = 0; i < INITIAL_MAX_ASCII_CHAR; i++) {
             subImgCharMatcher.addChar((char) ('0' + i));
         }
-        this.img = new Image(INITIAL_IMAGE);
+        Image initImage = new Image(INITIAL_IMAGE);
+        this.imageEditor = new ImageEditor();
+        this.img = imageEditor.paddImage(initImage);
 
         minCharsInRow = Math.max(1, img.getWidth() / img.getHeight());
         maxCharsInRow = img.getWidth();
@@ -161,7 +165,8 @@ public class Shell {
     private void handleImageChange(String[] inputs) throws IOException, FormatException {
         if (inputs.length == CHANGE_COMMANDS_LENGTH) {
             try {
-                this.img = new Image(inputs[1]);
+                Image initImage = new Image(inputs[1]);
+                this.img = imageEditor.paddImage(initImage);
                 minCharsInRow = Math.max(1, img.getWidth() / img.getHeight());
                 maxCharsInRow = img.getWidth();
                 charsInRow = Math.max(Math.min(INITIAL_CHARS_IN_ROW, maxCharsInRow), minCharsInRow);
