@@ -4,16 +4,10 @@ import java.awt.*;
 
 /**
  * A class for editing images.
- * 
  */
 public class ImageEditor {
 
-    //////////////////////////////////////////
-    // Private fields
-    //////////////////////////////////////////
-
     private static final Color DEFAULT_COLOR = Color.WHITE;
-    private final int maxBrightness = 255;
 
     // Gets a sub image from the original image.
     private Image getSubImage(int x, int y, int size, Image originalImage) {
@@ -38,23 +32,22 @@ public class ImageEditor {
         return newSize;
     }
 
+    // Returns the greyscale value of the given color.
     private int greyScale(Color color) {
         return (int) (color.getRed() * 0.2126 + color.getGreen() * 0.7152 + color.getBlue() * 0.0722);
     }
 
-    //////////////////////////////////////////
-    // Public methods
-    //////////////////////////////////////////
-
+    /**
+     * Constructor for the ImageEditor class.
+     */
     public ImageEditor() {
 
     }
 
     /**
-     * 
      * Returns the brightness of the image.
-     * 
-     * @param image
+     *
+     * @param image the image to get the brightness of
      * @return double
      */
     public float getBrightness(Image image) {
@@ -64,21 +57,21 @@ public class ImageEditor {
                 sum += greyScale(image.getPixel(x, y));
             }
         }
+        int maxBrightness = 255;
         return (float) sum / (image.getWidth() * image.getHeight() * maxBrightness);
     }
 
     /**
-     * 
      * Repixelates the image to a multiple images with new resolution.
-     * 
-     * @param image
-     * @param resolution
-     * @return
+     *
+     * @param image      the image to repixelate
+     * @param resolution the new resolution
+     * @return Image[][] the repixelated image
      */
     public Image[][] getRepixelatedImage(Image image, int resolution) {
 
         int newWidth = image.getWidth() / resolution;
-        int yResolution = image.getHeight()/newWidth;
+        int yResolution = image.getHeight() / newWidth;
 
         Image[][] repixelatedImage = new Image[resolution][yResolution];
 
@@ -92,12 +85,9 @@ public class ImageEditor {
     }
 
     /**
-     * 
      * Scales the image to a size which is a square of 2.
-     * 
-     * @param image
-     * @param newWidth
-     * @param newHeight
+     *
+     * @param image the image to scale
      * @return Image
      */
     public Image paddImage(Image image) {

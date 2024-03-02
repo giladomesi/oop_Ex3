@@ -9,7 +9,8 @@ package exceptions;
 public class BoundariesException extends Exception {
     /**
      * exception sender.
-     * @param message
+     *
+     * @param message the message to send
      */
     public BoundariesException(String message) {
         super(message);

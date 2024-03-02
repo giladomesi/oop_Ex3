@@ -14,7 +14,8 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Shell for running image asciArt on different images.
+ * Shell for running image asciiArt on different images.
+ *
  * @author Gilad Omesi Noam Cohen
  */
 public class Shell {
@@ -50,16 +51,16 @@ public class Shell {
     private static final int BOUNDARIES_ERROR = 5;
     private static final int ASCII_ART_ERROR = 6;
     private static final Map<Integer, String> ERROR_MESSAGES = Map.of(
-            ADD_ERROR, "Did not add due to incorrect format",
-            REMOVE_ERROR, "Did not remove due to incorrect format",
+            ADD_ERROR, "Did not add due to incorrect format.",
+            REMOVE_ERROR, "Did not remove due to incorrect format.",
             RES_ERROR, "Did not change resolution due to incorrect format.",
             IMAGE_ERROR, "Did not execute due to problem with image file.",
             OUTPUT_ERROR, "Did not change output method due to incorrect format.",
-            BOUNDARIES_ERROR, "Did not change due to exceeding boundaries",
+            BOUNDARIES_ERROR, "Did not change resolution due to exceeding boundaries.",
             ASCII_ART_ERROR, "Did not execute. Charset is empty."
     );
     private static final String RESOLUTION_SETTER_MESSAGE = "Resolution set to ";
-    private static final String INVALID_COMMAND_MESSAGE = "Invalid command.";
+    private static final String INVALID_COMMAND_MESSAGE = "Did not execute due to incorrect command.";
     private static final String HTML_FILE_NAME = "out.html";
     private static final String FONT_NAME = "Courier New";
     private int minCharsInRow;
@@ -74,6 +75,7 @@ public class Shell {
 
     /**
      * Constructor for the shell. Uses initial parameters for charset and image.
+     *
      * @throws IOException
      */
     public Shell() throws IOException {
@@ -97,7 +99,7 @@ public class Shell {
      * Run command for the shell,
      * recieves different commands and acts accordingly.
      */
-    public void run()  {
+    public void run() {
         boolean isActive = true;
         while (isActive) {
             System.out.print(NEW_COMMAND);
@@ -105,19 +107,38 @@ public class Shell {
             String command = inputs[0];
             try {
                 switch (getCommandIndex(command)) {
-                    case COMMAND_EXIT: isActive = false; break;
-                    case COMMAND_CHARS: System.out.println(subImgCharMatcher.getCharSet()); break;
+                    case COMMAND_EXIT:
+                        isActive = false;
+                        break;
+                    case COMMAND_CHARS:
+                        System.out.println(subImgCharMatcher.getCharSet());
+                        break;
                     case COMMAND_ADD:
-                    case COMMAND_REMOVE: handleAddRemoveCommand(inputs, command); break;
-                    case COMMAND_RES: handleResolutionChange(inputs); break;
-                    case COMMAND_IMAGE: handleImageChange(inputs); break;
-                    case COMMAND_OUTPUT: handleOutputChange(inputs); break;
-                    case COMMAND_ASCII_ART: generateAsciiArt(); break;
-                    default: System.out.println(INVALID_COMMAND_MESSAGE);
+                    case COMMAND_REMOVE:
+                        handleAddRemoveCommand(inputs, command);
+                        break;
+                    case COMMAND_RES:
+                        handleResolutionChange(inputs);
+                        break;
+                    case COMMAND_IMAGE:
+                        handleImageChange(inputs);
+                        break;
+                    case COMMAND_OUTPUT:
+                        handleOutputChange(inputs);
+                        break;
+                    case COMMAND_ASCII_ART:
+                        generateAsciiArt();
+                        break;
+                    default:
+                        System.out.println(INVALID_COMMAND_MESSAGE);
                 }
-            } catch (Exception e) { System.out.println(e.getMessage()); }
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
         }
     }
+
+    // The following methods are used to handle the different commands.
     private int getCommandIndex(String command) {
         for (int i = 0; i < COMMANDS.length; i++) {
             if (command.equals(COMMANDS[i])) {
@@ -127,9 +148,9 @@ public class Shell {
         return -1;
     }
 
+    // The following method is used to generate the ascii art.
     private void generateAsciiArt() throws EmptyCharSetException {
-        if (subImgCharMatcher.getCharSet().length ==0)
-        {
+        if (subImgCharMatcher.getCharSet().length == 0) {
             throw new EmptyCharSetException(ERROR_MESSAGES.get(ASCII_ART_ERROR));
         }
         char[][] asciiArt = asciiArtAlgo.run();
@@ -140,28 +161,30 @@ public class Shell {
         }
     }
 
+    // The following method is used to add or remove characters from the charset.
     private void handleAddRemoveCommand(String[] inputs, String command) throws FormatException {
         boolean isRemove = command.equals(COMMANDS[COMMAND_REMOVE]);
-        int error =isRemove? REMOVE_ERROR:ADD_ERROR;
+        int error = isRemove ? REMOVE_ERROR : ADD_ERROR;
         if (inputs.length != CHANGE_COMMANDS_LENGTH) {
             throw new FormatException(ERROR_MESSAGES.get(error));
         }
-        String parameter = inputs[CHANGE_COMMANDS_LENGTH-1];
+        String parameter = inputs[CHANGE_COMMANDS_LENGTH - 1];
         if (!addRemoveFunction(parameter, isRemove)) {
             throw new FormatException(ERROR_MESSAGES.get(error));
         }
     }
 
+    // The following method is used to handle the resolution change command.
     private void handleResolutionChange(String[] inputs) throws FormatException, BoundariesException {
         if (inputs.length == CHANGE_COMMANDS_LENGTH &&
-                (inputs[1].equals(RESOLUTION_CHANGE[0]) || inputs[1].equals(RESOLUTION_CHANGE[1])))
-        {
+                (inputs[1].equals(RESOLUTION_CHANGE[0]) || inputs[1].equals(RESOLUTION_CHANGE[1]))) {
             updateRes(inputs[1]);
         } else {
             throw new FormatException(ERROR_MESSAGES.get(RES_ERROR));
         }
     }
 
+    // The following method is used to handle the image change command.
     private void handleImageChange(String[] inputs) throws IOException, FormatException {
         if (inputs.length == CHANGE_COMMANDS_LENGTH) {
             try {
@@ -179,6 +202,7 @@ public class Shell {
         }
     }
 
+    // The following method is used to handle the output change command.
     private void handleOutputChange(String[] inputs) throws FormatException {
         if (inputs.length == CHANGE_COMMANDS_LENGTH) {
             if (Objects.equals(inputs[1], CONSOLE_COMMAND)) {
@@ -194,6 +218,7 @@ public class Shell {
         }
     }
 
+    // The following method is used to handle the resolution change command.
     private void updateRes(String change) throws BoundariesException {
         minCharsInRow = Math.max(1, img.getWidth() / img.getHeight());
         maxCharsInRow = img.getWidth();
@@ -208,10 +233,11 @@ public class Shell {
             }
             charsInRow = Math.max(charsInRow / RES_MULTIPLIER, minCharsInRow);
         }
-        System.out.println(RESOLUTION_SETTER_MESSAGE + charsInRow);
+        System.out.println(RESOLUTION_SETTER_MESSAGE + charsInRow + ".");
         asciiArtAlgo = new AsciiArtAlgorithm(img, charsInRow, subImgCharMatcher);
     }
 
+    // The following method is used to add or remove characters from the charset.
     private boolean addRemoveFunction(String c, boolean isRemove) {
         if (c.equals(SPECIAL_COMMANDS[0])) {
             if (isRemove) {
@@ -225,20 +251,26 @@ public class Shell {
             return true;
         }
         if (c.length() == MULTI_CHAR_REMOVAL_LENGTH && c.charAt(1) == '-') {
-            char start = c.charAt(0), end = c.charAt(MULTI_CHAR_REMOVAL_LENGTH-1);
-            if (start > end) { char tmp = start; start = end; end = tmp; }
+            char start = c.charAt(0), end = c.charAt(MULTI_CHAR_REMOVAL_LENGTH - 1);
+            if (start > end) {
+                char tmp = start;
+                start = end;
+                end = tmp;
+            }
             for (char i = start; i <= end; i++) addRemoveChar(i, isRemove);
             return true;
         }
         return false;
     }
 
+    // The following method is used to add all characters to the charset.
     private void addAll() {
         for (int i = MIN_ASCII_CHAR; i < MAX_ASCII_CHAR; i++) {
             subImgCharMatcher.addChar((char) i);
         }
     }
 
+    // The following method is used to add or remove characters from the charset.
     private void addRemoveChar(char c, boolean isRemove) {
         if (isRemove) {
             subImgCharMatcher.removeChar(c);
@@ -247,21 +279,23 @@ public class Shell {
         }
     }
 
-
+    // The following method is used to print the ascii art to the console.
     private void printToConsole(char[][] rendered) {
         ConsoleAsciiOutput consoleOutput = new ConsoleAsciiOutput();
         consoleOutput.out(rendered);
     }
 
+    // The following method is used to save the ascii art to a html file.
     private void saveToHtml(char[][] rendered) {
         HtmlAsciiOutput htmlOutput = new HtmlAsciiOutput(HTML_FILE_NAME, FONT_NAME);
         htmlOutput.out(rendered);
     }
 
     /**
-     * Main functoin.
-     * @param args
-     * @throws IOException
+     * Main function.
+     *
+     * @param args - arguments.
+     * @throws IOException - if there is a problem with the image file.
      */
     public static void main(String[] args) throws IOException {
         Shell shell = new Shell();

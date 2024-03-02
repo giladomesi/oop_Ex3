@@ -6,10 +6,11 @@ package exceptions;
  *
  * @author Gilad Omesi and Noam Cohen
  */
-public class EmptyCharSetException extends Exception{
+public class EmptyCharSetException extends Exception {
     /**
      * exception sender.
-     * @param message
+     *
+     * @param message the message to send
      */
     public EmptyCharSetException(String message) {
         super(message);

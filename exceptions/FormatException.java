@@ -10,7 +10,8 @@ public class FormatException extends Exception {
 
     /**
      * exception sender.
-     * @param message
+     *
+     * @param message the message to send
      */
     public FormatException(String message) {
         super(message);

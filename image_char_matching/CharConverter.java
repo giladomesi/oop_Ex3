@@ -23,24 +23,26 @@ public class CharConverter {
      * whose dimension in pixels is specified.
      */
     public static boolean[][] convertToBoolArray(char c) {
-        BufferedImage img = getBufferedImage(c, FONT_NAME, DEFAULT_PIXEL_RESOLUTION);
+        BufferedImage img = getBufferedImage(c);
         boolean[][] matrix = new boolean[DEFAULT_PIXEL_RESOLUTION][DEFAULT_PIXEL_RESOLUTION];
-        for(int y = 0 ; y < DEFAULT_PIXEL_RESOLUTION ; y++) {
-            for(int x = 0 ; x < DEFAULT_PIXEL_RESOLUTION ; x++) {
+        for (int y = 0; y < DEFAULT_PIXEL_RESOLUTION; y++) {
+            for (int x = 0; x < DEFAULT_PIXEL_RESOLUTION; x++) {
                 matrix[y][x] = img.getRGB(x, y) == 0; //is the color black
             }
         }
         return matrix;
     }
 
-    private static BufferedImage getBufferedImage(char c, String fontName, int pixelsPerRow) {
+    // Returns a buffered image of the character.
+    private static BufferedImage getBufferedImage(char c) {
         String charStr = Character.toString(c);
-        Font font = new Font(fontName, Font.PLAIN, pixelsPerRow);
-        BufferedImage img = new BufferedImage(pixelsPerRow, pixelsPerRow, BufferedImage.TYPE_INT_ARGB);
+        Font font = new Font(CharConverter.FONT_NAME, Font.PLAIN, CharConverter.DEFAULT_PIXEL_RESOLUTION);
+        BufferedImage img = new BufferedImage(CharConverter.DEFAULT_PIXEL_RESOLUTION,
+                CharConverter.DEFAULT_PIXEL_RESOLUTION, BufferedImage.TYPE_INT_ARGB);
         Graphics g = img.getGraphics();
         g.setFont(font);
-        int xOffset = (int)Math.round(pixelsPerRow *X_OFFSET_FACTOR);
-        int yOffset = (int)Math.round(pixelsPerRow *Y_OFFSET_FACTOR);
+        int xOffset = (int) Math.round(CharConverter.DEFAULT_PIXEL_RESOLUTION * X_OFFSET_FACTOR);
+        int yOffset = (int) Math.round(CharConverter.DEFAULT_PIXEL_RESOLUTION * Y_OFFSET_FACTOR);
         g.drawString(charStr, xOffset, yOffset);
         return img;
     }

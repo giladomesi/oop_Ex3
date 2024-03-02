@@ -2,7 +2,7 @@ package ascii_art;
 
 import java.util.Scanner;
 
-class KeyboardInput
+public class KeyboardInput
 {
     private static KeyboardInput keyboardInputObject = null;
     private Scanner scanner;
@@ -19,6 +19,11 @@ class KeyboardInput
             KeyboardInput.keyboardInputObject = new KeyboardInput();
         }
         return KeyboardInput.keyboardInputObject;
+    }
+
+    public static void Refresh() {
+        KeyboardInput.getObject().scanner.close();
+        KeyboardInput.getObject().scanner = new Scanner(System.in);
     }
 
     public static String readLine()
