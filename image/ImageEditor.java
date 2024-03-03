@@ -37,8 +37,8 @@ public class ImageEditor {
     }
 
     // Returns the greyscale value of the given color.
-    private int greyScale(Color color) {
-        return (int) (color.getRed() * RED_CONST + color.getGreen() * GREEN_CONST + color.getBlue() * BLUE_CONST);
+    private double greyScale(Color color) {
+        return (color.getRed() * RED_CONST + color.getGreen() * GREEN_CONST + color.getBlue() * BLUE_CONST);
     }
 
     /**
@@ -54,15 +54,15 @@ public class ImageEditor {
      * @param image the image to get the brightness of
      * @return double
      */
-    public float getBrightness(Image image) {
-        int sum = 0;
+    public double getBrightness(Image image) {
+        double sum = 0;
         for (int y = 0; y < image.getHeight(); y++) {
             for (int x = 0; x < image.getWidth(); x++) {
                 sum += greyScale(image.getPixel(x, y));
             }
         }
 
-        return (float) sum / (image.getWidth() * image.getHeight() * MAX_BRIGHTNESS);
+        return sum / (image.getWidth() * image.getHeight() * MAX_BRIGHTNESS);
     }
 
     /**

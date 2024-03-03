@@ -9,7 +9,7 @@ import image_char_matching.SubImgCharMatcher;
  */
 public class AsciiArtAlgorithm {
 
-    private final float[][] brightness;
+    private final double[][] brightness;
     private final SubImgCharMatcher subImgCharMatcher;
 
     /**
@@ -24,7 +24,7 @@ public class AsciiArtAlgorithm {
         this.subImgCharMatcher = subImgCharMatcher;
         ImageEditor imageEditor = new ImageEditor();
         Image[][] repixelatedImage = imageEditor.getRepixelatedImage(image, resolution);
-        this.brightness = new float[repixelatedImage.length][repixelatedImage[0].length];
+        this.brightness = new double[repixelatedImage.length][repixelatedImage[0].length];
         for (int x = 0; x < repixelatedImage.length; x++) {
             for (int y = 0; y < repixelatedImage[0].length; y++) {
                 brightness[x][y] = imageEditor.getBrightness(repixelatedImage[x][y]);
