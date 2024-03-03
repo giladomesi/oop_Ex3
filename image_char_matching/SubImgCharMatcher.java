@@ -17,7 +17,6 @@ public class SubImgCharMatcher {
     private double minBrightness = DEFAULT_PIXEL_RESOLUTION * DEFAULT_PIXEL_RESOLUTION;
     private double maxBrightness = 0;
 
-
     /**
      * Constructor for the SubImgCharMatcher class.
      *
@@ -32,11 +31,22 @@ public class SubImgCharMatcher {
 
     /**
      * Getter for the char set.
+     * returns char set sorted by ascii.
      *
      * @return char set
      */
     public char[] getCharSet() {
-        return charSet;
+        char[] sortedCharSet = charSet.clone();
+        for (int i = 0; i < sortedCharSet.length; i++) {
+            for (int j = i + 1; j < sortedCharSet.length; j++) {
+                if (sortedCharSet[i] > sortedCharSet[j]) {
+                    char temp = sortedCharSet[i];
+                    sortedCharSet[i] = sortedCharSet[j];
+                    sortedCharSet[j] = temp;
+                }
+            }
+        }
+        return sortedCharSet;
     }
 
     /**
@@ -72,7 +82,7 @@ public class SubImgCharMatcher {
         return char1 < char2 ? key1 : key2;
     }
 
-    //sync the brightness map with the character set
+    // sync the brightness map with the character set
     private void updateBrightnessMap() {
         charBrightnessMap.clear();
         for (char c : charSet) {

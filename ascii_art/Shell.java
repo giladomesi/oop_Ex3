@@ -37,10 +37,10 @@ public class Shell {
     private static final int MULTI_CHAR_REMOVAL_LENGTH = 3;
     private static final int RES_MULTIPLIER = 2;
 
-    private static final String[] COMMANDS = {"exit", "chars", "add", "remove", "res",
-            "image", "output", "asciiArt"};
-    private static final String[] SPECIAL_COMMANDS = {"all", "space"};
-    private static final String[] RESOLUTION_CHANGE = {"up", "down"};
+    private static final String[] COMMANDS = { "exit", "chars", "add", "remove", "res",
+            "image", "output", "asciiArt" };
+    private static final String[] SPECIAL_COMMANDS = { "all", "space" };
+    private static final String[] RESOLUTION_CHANGE = { "up", "down" };
     private static final String CONSOLE_COMMAND = "console";
     private static final String HTML_COMMAND = "html";
     private static final int ADD_ERROR = 0;
@@ -57,8 +57,7 @@ public class Shell {
             IMAGE_ERROR, "Did not execute due to problem with image file.",
             OUTPUT_ERROR, "Did not change output method due to incorrect format.",
             BOUNDARIES_ERROR, "Did not change resolution due to exceeding boundaries.",
-            ASCII_ART_ERROR, "Did not execute. Charset is empty."
-    );
+            ASCII_ART_ERROR, "Did not execute. Charset is empty.");
     private static final String RESOLUTION_SETTER_MESSAGE = "Resolution set to ";
     private static final String INVALID_COMMAND_MESSAGE = "Did not execute due to incorrect command.";
     private static final String HTML_FILE_NAME = "out.html";
@@ -107,15 +106,34 @@ public class Shell {
             String command = inputs[0];
             try {
                 switch (getCommandIndex(command)) {
-                    case COMMAND_EXIT: isActive = false; break;
-                    case COMMAND_CHARS: System.out.println(subImgCharMatcher.getCharSet()); break;
+                    case COMMAND_EXIT:
+                        isActive = false;
+                        break;
+                    case COMMAND_CHARS:
+                        // print all chars with a space in between
+                        for (char c : subImgCharMatcher.getCharSet()) {
+                            System.out.print(c + " ");
+                        }
+                        System.out.println();
+                        break;
                     case COMMAND_ADD:
-                    case COMMAND_REMOVE: handleAddRemoveValidate(inputs, command); break;
-                    case COMMAND_RES: handleResolutionChange(inputs);break;
-                    case COMMAND_IMAGE: handleImageChange(inputs);break;
-                    case COMMAND_OUTPUT: handleOutputChange(inputs);break;
-                    case COMMAND_ASCII_ART: generateAsciiArt();break;
-                    default: System.out.println(INVALID_COMMAND_MESSAGE);
+                    case COMMAND_REMOVE:
+                        handleAddRemoveValidate(inputs, command);
+                        break;
+                    case COMMAND_RES:
+                        handleResolutionChange(inputs);
+                        break;
+                    case COMMAND_IMAGE:
+                        handleImageChange(inputs);
+                        break;
+                    case COMMAND_OUTPUT:
+                        handleOutputChange(inputs);
+                        break;
+                    case COMMAND_ASCII_ART:
+                        generateAsciiArt();
+                        break;
+                    default:
+                        System.out.println(INVALID_COMMAND_MESSAGE);
                 }
             } catch (Exception e) {
                 System.out.println(e.getMessage());
@@ -234,14 +252,15 @@ public class Shell {
             if (isRemove) {
                 for (int i = MIN_ASCII_CHAR; i <= MAX_ASCII_CHAR; i++)
                     subImgCharMatcher.removeChar((char) i);
-            } else addAll();
+            } else
+                addAll();
             return true;
         }
-        if (c.equals(SPECIAL_COMMANDS[1]) ) {
+        if (c.equals(SPECIAL_COMMANDS[1])) {
             addRemoveChar(' ', isRemove);
             return true;
         }
-        if (c.length() == 1){
+        if (c.length() == 1) {
             addRemoveChar(c.charAt(0), isRemove);
             return true;
         }
@@ -252,7 +271,8 @@ public class Shell {
                 start = end;
                 end = tmp;
             }
-            for (char i = start; i <= end; i++) addRemoveChar(i, isRemove);
+            for (char i = start; i <= end; i++)
+                addRemoveChar(i, isRemove);
             return true;
         }
         return false;
