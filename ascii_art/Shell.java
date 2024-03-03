@@ -79,10 +79,12 @@ public class Shell {
      * @throws IOException if there is a problem with the image file.
      */
     public Shell() throws IOException {
-        subImgCharMatcher = new SubImgCharMatcher(new char[0]);
+        char[] l = new char[10];
         for (int i = 0; i < INITIAL_MAX_ASCII_CHAR; i++) {
-            subImgCharMatcher.addChar((char) ('0' + i));
+            l[i]=((char) ('0' + i));
         }
+        subImgCharMatcher = new SubImgCharMatcher(l);
+
         Image initImage = new Image(INITIAL_IMAGE);
         this.imageEditor = new ImageEditor();
         this.img = imageEditor.paddImage(initImage);
