@@ -234,7 +234,7 @@ public class Shell {
     private boolean addRemoveFunction(String c, boolean isRemove) {
         if (c.equals(SPECIAL_COMMANDS[0])) {
             if (isRemove) {
-                for (int i = MIN_ASCII_CHAR; i < MAX_ASCII_CHAR; i++)
+                for (int i = MIN_ASCII_CHAR; i <= MAX_ASCII_CHAR; i++)
                     subImgCharMatcher.removeChar((char) i);
             } else addAll();
             return true;
