@@ -76,7 +76,7 @@ public class Shell {
     /**
      * Constructor for the shell. Uses initial parameters for charset and image.
      *
-     * @throws IOException
+     * @throws IOException if there is a problem with the image file.
      */
     public Shell() throws IOException {
         subImgCharMatcher = new SubImgCharMatcher(new char[0]);
@@ -192,7 +192,13 @@ public class Shell {
                 this.img = imageEditor.paddImage(initImage);
                 minCharsInRow = Math.max(1, img.getWidth() / img.getHeight());
                 maxCharsInRow = img.getWidth();
-                charsInRow = Math.max(Math.min(INITIAL_CHARS_IN_ROW, maxCharsInRow), minCharsInRow);
+                if (charsInRow > maxCharsInRow) {
+                    charsInRow = maxCharsInRow;
+                }
+                if (charsInRow < minCharsInRow) {
+                    charsInRow = minCharsInRow;
+                }
+//                charsInRow = Math.max(Math.min(INITIAL_CHARS_IN_ROW, maxCharsInRow), minCharsInRow);
                 asciiArtAlgo = new AsciiArtAlgorithm(img, charsInRow, subImgCharMatcher);
             } catch (IOException e) {
                 throw new IOException(ERROR_MESSAGES.get(IMAGE_ERROR));

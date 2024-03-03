@@ -49,8 +49,11 @@ public class SubImgCharMatcher {
         }
 
         double diff = 1;
-        double key_match = normalizedMap.firstKey();
+        double key_match = normalizedMap.lastKey();
         for (double key : normalizedMap.keySet()) {
+            if (Math.abs(key - brightness) == diff) {
+                key_match = getMinCharForBrightness(normalizedMap, key, key_match);
+            }
             if (Math.abs(key - brightness) < diff) {
                 diff = Math.abs(key - brightness);
                 key_match = key;
@@ -58,6 +61,14 @@ public class SubImgCharMatcher {
         }
 
         return normalizedMap.get(key_match).first();
+    }
+
+    private double getMinCharForBrightness(TreeMap<Double, TreeSet<Character>> normalizedMap,
+                                           double key1, double key2) {
+        char char1 = normalizedMap.get(key1).first();
+        char char2 = normalizedMap.get(key2).first();
+
+        return char1 < char2 ? key1 : key2;
     }
 
     //sync the brightness map with the character set
@@ -74,6 +85,9 @@ public class SubImgCharMatcher {
      * @param c the character to add
      */
     public void addChar(char c) {
+        if (new String(charSet).contains(String.valueOf(c))) {
+            return;
+        }
         char[] newCharSet = new char[charSet.length + 1];
         System.arraycopy(charSet, 0, newCharSet, 0, charSet.length);
         newCharSet[charSet.length] = c;
