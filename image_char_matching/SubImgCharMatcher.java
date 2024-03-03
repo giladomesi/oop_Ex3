@@ -121,7 +121,7 @@ public class SubImgCharMatcher {
 
     // Remove a character from the brightness map
     private void removeCharFromBrightnessMap(char c) {
-        if(charSet.length == 0) {
+        if (charSet.length == 0) {
             minBrightness = DEFAULT_PIXEL_RESOLUTION * DEFAULT_PIXEL_RESOLUTION;
             maxBrightness = 0;
             charBrightnessMap.clear();

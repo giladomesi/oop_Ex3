@@ -115,7 +115,7 @@ public class Shell {
                         break;
                     case COMMAND_ADD:
                     case COMMAND_REMOVE:
-                        handleAddRemoveCommand(inputs, command);
+                        handleAddRemoveValidate(inputs, command);
                         break;
                     case COMMAND_RES:
                         handleResolutionChange(inputs);
@@ -162,7 +162,7 @@ public class Shell {
     }
 
     // The following method is used to add or remove characters from the charset.
-    private void handleAddRemoveCommand(String[] inputs, String command) throws FormatException {
+    private void handleAddRemoveValidate(String[] inputs, String command) throws FormatException {
         boolean isRemove = command.equals(COMMANDS[COMMAND_REMOVE]);
         int error = isRemove ? REMOVE_ERROR : ADD_ERROR;
         if (inputs.length != CHANGE_COMMANDS_LENGTH) {
@@ -246,7 +246,11 @@ public class Shell {
             } else addAll();
             return true;
         }
-        if (c.equals(SPECIAL_COMMANDS[1]) || c.length() == 1) {
+        if (c.equals(SPECIAL_COMMANDS[1]) ) {
+            addRemoveChar(' ', isRemove);
+            return true;
+        }
+        if (c.length() == 1){
             addRemoveChar(c.charAt(0), isRemove);
             return true;
         }
