@@ -1,0 +1,117 @@
+gilad.omesi,noam.cohen11
+319011961,318776739
+
+# 1. Class Description
+For graphic description, the uml is also uploaded.
+
+## Shell
+The shell is where the main function is located. 
+It is in charge of the shell, meaning it gets the user's commands
+and does them. to do so, the shell uses several classes.
+
+a. Image:   When the user gives us a new image file, we need to convert it to an actual image.
+b. ImageEditor:         The given image needs to be padded, so we do it using the imageEditor. 
+c. KeyBoardInput:       To get the input, we need to use this.
+d. ConsoleAsciiOutput, HtmlAsciiOutput: To give the user the ascii art output, we neeed classes
+                                        That share the ascii art the way the user wanted.
+e. Exception classes:   will be explained in greater detail in question 3. 
+f. AsciiArtAlgorithem:  the algorithm is used to get asciiart from an image.
+g. SubImgCharMatcher:   When the user asks to add or remove a char, we use this class
+                        to add them. This class is then sent to the algorithm to know
+                        what chars can be used. 
+
+
+## Image
+The given image class - unchanged.
+Saves the height, width and all pixel values.
+
+## ImageEditor
+The editor of images, has all functions that manipulate images.
+For the current that means padding and resolution change. 
+It has a dependency on the Image class only. 
+
+## KeyboardInput
+Also a given class - unchanged. 
+Used only by the shell when we get an input from the user.
+
+## ConsoleAsciiOutput
+Also a given class - unchanged. 
+Gets the char list(the ascii art) and prints it to the console.
+
+## HtmlAsciiOutput
+Also a given class - unchanged.
+Gets the char list(the ascii art) and prints it to an html file.
+
+## FormalException
+Extends normal exception. used when the user gives input with wrong format. 
+
+## BoundariesException
+Extends normal exception. used when the user tries to use resolution that is
+out of bounds.
+
+## EmptyCharSetException
+Extends normal exception. used when we try to use the algorithm with an empty charset. 
+
+## CharConverter
+Also a given class - unchanged.
+Converts chars to brightness level.
+
+## SubImgCharMatcher
+In charge of saving the charset, adding or removing chars, and organizing them. 
+Created by the shell and passed to the algorithm. Uses CharConverter.
+
+## AsciiArtAlgorithm
+The actual algorithm that gets an image and transforms it to ascii art.
+It does so by using the image editor to convert the image to the right resolution
+(an image array of the right resolution), and for each subimage it uses SubImgCharMatcher
+to get the right char with the same brightness. 
+
+it uses ImageEditor, SubImgCharMatcher, Image. 
+
+# 2. Data Structures
+
+## CharSet - TreeMap<Double,TreeSet<Character>>
+We used this structure to save the charset for multiple reasons.
+First, this matches brightness levels (double) with chars (Character).
+This allows us to search for a char based on the image brightness. 
+Secondly, we used a treeSet because several chars can have the same
+brightness, and we want to save them based on there ascii. 
+A tree is the perfect way to do so, since it allows us to sort
+easily even after we remove or add a char.
+Finally, the treeMap is used because we can get a maximum and minimum
+of the chars easily. and we can update it (when we remove or add)
+by going to the following branch.
+
+# 3. Exceptions
+
+As noted in question 1, we added 3 custom exceptions that extend on 
+the normal exception. EmptyCharSetException, BoundariesException, FormalException.
+Their description is also in question 1.
+This exceptions where thrown in the functions that deal with each user command
+which sent a message fitting for their function. Then dealt with (printed)
+in the shell run command.
+
+We added them for 3 reasons:
+a.  readability. When reading the code, you can understand what issue the programmer
+    was trying to catch when you know the type of exception he caught. 
+b.  Debugging. Several issues have the print error, so when debugging we might not 
+    know what issue caused the print. the exceptions solve this. 
+b.  To allow future programmers the ability to add features for each of the errors.
+    For example, if in case the FormalException was raised, we want to log it,
+    to know which part of the api the user is not understanding, this can be done
+    easily with the custom exceptions.
+
+# 4. SubImgCharMatcher Changes
+We added one change to the class, a getter for the charset (returns char[]). 
+This was done because the user can ask to see the entire charset. And the 
+shell doesn't save it separately because that would be redundant. 
+
+# 5. Given Class Changes
+We didn't change any classes that were given to us. 
+
+
+
+
+
+
+  
