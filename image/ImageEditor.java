@@ -8,6 +8,10 @@ import java.awt.*;
 public class ImageEditor {
 
     private static final Color DEFAULT_COLOR = Color.WHITE;
+    private static final int MAX_BRIGHTNESS = 255;
+    private static final double RED_CONST = 0.2126;
+    private static final double GREEN_CONST = 0.7152;
+    private static final double BLUE_CONST = 0.0722;
 
     // Gets a sub image from the original image.
     private Image getSubImage(int x, int y, int size, Image originalImage) {
@@ -34,7 +38,7 @@ public class ImageEditor {
 
     // Returns the greyscale value of the given color.
     private int greyScale(Color color) {
-        return (int) (color.getRed() * 0.2126 + color.getGreen() * 0.7152 + color.getBlue() * 0.0722);
+        return (int) (color.getRed() * RED_CONST + color.getGreen() * GREEN_CONST + color.getBlue() * BLUE_CONST);
     }
 
     /**
@@ -57,8 +61,8 @@ public class ImageEditor {
                 sum += greyScale(image.getPixel(x, y));
             }
         }
-        int maxBrightness = 255;
-        return (float) sum / (image.getWidth() * image.getHeight() * maxBrightness);
+
+        return (float) sum / (image.getWidth() * image.getHeight() * MAX_BRIGHTNESS);
     }
 
     /**

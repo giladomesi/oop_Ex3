@@ -12,6 +12,8 @@ public class SubImgCharMatcher {
 
     private char[] charSet;
     private final TreeMap<Double, TreeSet<Character>> charBrightnessMap;
+    private TreeMap<Double, TreeSet<Character>> normalizedMap;
+
     private double minBrightness = DEFAULT_PIXEL_RESOLUTION * DEFAULT_PIXEL_RESOLUTION;
     private double maxBrightness = 0;
 
@@ -25,6 +27,7 @@ public class SubImgCharMatcher {
         this.charSet = charset;
         charBrightnessMap = new TreeMap<>();
         updateBrightnessMap();
+        updateNormalizedMap();
     }
 
     /**
@@ -43,7 +46,6 @@ public class SubImgCharMatcher {
      * @return char
      */
     public char getCharByImageBrightness(double brightness) {
-        TreeMap<Double, TreeSet<Character>> normalizedMap = getNormalizingCharBrightnessMap();
         if (normalizedMap.containsKey(brightness)) {
             return normalizedMap.get(brightness).first();
         }
@@ -52,7 +54,7 @@ public class SubImgCharMatcher {
         double key_match = normalizedMap.lastKey();
         for (double key : normalizedMap.keySet()) {
             if (Math.abs(key - brightness) == diff) {
-                key_match = getMinCharForBrightness(normalizedMap, key, key_match);
+                key_match = getMinCharForBrightness(key, key_match);
             }
             if (Math.abs(key - brightness) < diff) {
                 diff = Math.abs(key - brightness);
@@ -63,8 +65,7 @@ public class SubImgCharMatcher {
         return normalizedMap.get(key_match).first();
     }
 
-    private double getMinCharForBrightness(TreeMap<Double, TreeSet<Character>> normalizedMap,
-                                           double key1, double key2) {
+    private double getMinCharForBrightness(double key1, double key2) {
         char char1 = normalizedMap.get(key1).first();
         char char2 = normalizedMap.get(key2).first();
 
@@ -93,6 +94,7 @@ public class SubImgCharMatcher {
         newCharSet[charSet.length] = c;
         charSet = newCharSet;
         addCharToBrightnessMap(c);
+        updateNormalizedMap();
     }
 
     // Add a character to the brightness map
@@ -127,6 +129,7 @@ public class SubImgCharMatcher {
                 System.arraycopy(charSet, 1, newCharSet, 0, charSet.length - 1);
                 charSet = newCharSet;
                 removeCharFromBrightnessMap(c);
+                updateNormalizedMap();
                 return;
             }
             index++;
@@ -168,14 +171,13 @@ public class SubImgCharMatcher {
         return brightness;
     }
 
-    // returns TreeMap of brightness values and the corresponding characters
-    // after normalizing the brightness values
-    private TreeMap<Double, TreeSet<Character>> getNormalizingCharBrightnessMap() {
-        TreeMap<Double, TreeSet<Character>> normalizedMap = new TreeMap<>();
+    // Update the normalized map
+    private void updateNormalizedMap() {
+        TreeMap<Double, TreeSet<Character>> newNormalizedMap = new TreeMap<>();
         for (double key : charBrightnessMap.keySet()) {
             double normalizedKey = (key - minBrightness) / (maxBrightness - minBrightness);
-            normalizedMap.put(normalizedKey, charBrightnessMap.get(key));
+            newNormalizedMap.put(normalizedKey, charBrightnessMap.get(key));
         }
-        return normalizedMap;
+        normalizedMap = newNormalizedMap;
     }
 }
