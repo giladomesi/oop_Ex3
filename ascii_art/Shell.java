@@ -107,30 +107,15 @@ public class Shell {
             String command = inputs[0];
             try {
                 switch (getCommandIndex(command)) {
-                    case COMMAND_EXIT:
-                        isActive = false;
-                        break;
-                    case COMMAND_CHARS:
-                        System.out.println(subImgCharMatcher.getCharSet());
-                        break;
+                    case COMMAND_EXIT: isActive = false; break;
+                    case COMMAND_CHARS: System.out.println(subImgCharMatcher.getCharSet()); break;
                     case COMMAND_ADD:
-                    case COMMAND_REMOVE:
-                        handleAddRemoveValidate(inputs, command);
-                        break;
-                    case COMMAND_RES:
-                        handleResolutionChange(inputs);
-                        break;
-                    case COMMAND_IMAGE:
-                        handleImageChange(inputs);
-                        break;
-                    case COMMAND_OUTPUT:
-                        handleOutputChange(inputs);
-                        break;
-                    case COMMAND_ASCII_ART:
-                        generateAsciiArt();
-                        break;
-                    default:
-                        System.out.println(INVALID_COMMAND_MESSAGE);
+                    case COMMAND_REMOVE: handleAddRemoveValidate(inputs, command); break;
+                    case COMMAND_RES: handleResolutionChange(inputs);break;
+                    case COMMAND_IMAGE: handleImageChange(inputs);break;
+                    case COMMAND_OUTPUT: handleOutputChange(inputs);break;
+                    case COMMAND_ASCII_ART: generateAsciiArt();break;
+                    default: System.out.println(INVALID_COMMAND_MESSAGE);
                 }
             } catch (Exception e) {
                 System.out.println(e.getMessage());
@@ -198,7 +183,7 @@ public class Shell {
                 if (charsInRow < minCharsInRow) {
                     charsInRow = minCharsInRow;
                 }
-//                charsInRow = Math.max(Math.min(INITIAL_CHARS_IN_ROW, maxCharsInRow), minCharsInRow);
+
                 asciiArtAlgo = new AsciiArtAlgorithm(img, charsInRow, subImgCharMatcher);
             } catch (IOException e) {
                 throw new IOException(ERROR_MESSAGES.get(IMAGE_ERROR));
