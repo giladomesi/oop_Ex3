@@ -1,51 +1,295 @@
 package image_char_matching;
 
-import java.util.Map;
-import java.util.TreeSet;
-import java.util.TreeMap;
+import java.util.*;
 
+/**
+ * The SubImgCharMatcher class provides methods to match characters to image
+ * brightness values using a
+ * custom character set.
+ */
 public class SubImgCharMatcher {
 
-    private static final int NORMALIZATION_FACTOR = 256;
-    private TreeMap<Double, TreeSet<Character>> normalizedCharMap;
-    private TreeMap<Double, TreeSet<Character>> charBrightnessMap;
-    private double maxBrightness, minBrightness;
+    /**
+     * The default space character.
+     */
+    private static final char SPACE_CHAR = ' ';
+    /**
+     * Index of the first character in an array or string.
+     */
+    private static final int FIRST_INDEX = 0;
+    /**
+     * init a counter value to 0
+     */
+    private static final int INITIAL_COUNTER = 0;
+    /**
+     * init a counter value to 1
+     */
+    private static final int NEXT_COUNTER = 1;
 
+    /**
+     * The character brightness history map.
+     */
+    private static final HashMap<Character, Float> charBrightnessHistoryMap = new HashMap<>();
+
+    /**
+     * The mapping of normalized brightness values to characters.
+     */
+    private final TreeMap<Float, List<Character>> floatToCharsMap;
+
+    /**
+     * The minimum character brightness value.
+     */
+    private float minCharBrightness = Float.MAX_VALUE;
+
+    /**
+     * The maximum character brightness value.
+     */
+    private float maxCharBrightness = Float.MIN_VALUE;
+
+    /**
+     * Constructs a SubImgCharMatcher object with the specified character set.
+     *
+     * @param charset an array of characters forming the character set for the
+     *                algorithm.
+     */
     public SubImgCharMatcher(char[] charset) {
-        this.charBrightnessMap = new TreeMap<>();
-        this.normalizedCharMap = new TreeMap<>();
-        for (char currentChar : charset) {
-            double key = getCharBrightness(currentChar);
-            this.addCharHelperFunction(key, currentChar, charBrightnessMap);
+        this.floatToCharsMap = new TreeMap<>();
+        for (char c : charset) {
+            charBrightnessHistoryMap.put(c, getCharBrightness(c));
+            updateMin(c);
+            updateMax(c);
         }
-        this.maxBrightness = this.charBrightnessMap.lastKey();
-        this.minBrightness = this.charBrightnessMap.firstKey();
-
-        initNormalizeCharMap();
+        initNormalMap();
     }
-    // public TreeMap<Double,TreeSet<Character>> getNormalized (){// FOor testing
-    // return this.normalizedCharMap;
-    // }
 
-    public char getCharByImageBrightness(double brightness) {
-        double normalizedBrightness = calculateNormalizedBrightness(brightness);
+    /**
+     * Retrieves the character associated with the specified image brightness value.
+     *
+     * @param brightness the brightness value of the image.
+     * @return the character corresponding to the given brightness value.
+     * @throws RuntimeException if the character set is empty.
+     */
+    public char getCharByImageBrightness(double brightness) throws RuntimeException {
+        if (floatToCharsMap.isEmpty()) {
+            throw new RuntimeException("Character set is empty");
+        }
+        if (floatToCharsMap.containsKey((float) brightness)) {
+            return asciiMinValue(floatToCharsMap.get((float) brightness));
+        }
+        Map.Entry<Float, List<Character>> closestBrightnessDown = floatToCharsMap.lowerEntry((float) brightness);
+        Map.Entry<Float, List<Character>> closestBrightnessUp = floatToCharsMap.higherEntry((float) brightness);
 
-        var ceilKey = this.normalizedCharMap.ceilingKey(normalizedBrightness);
-        var floorKey = this.normalizedCharMap.floorKey(normalizedBrightness);
+        float disFromUp = (closestBrightnessUp != null) ? Math.abs(closestBrightnessUp.getKey() - (float) brightness)
+                : Float.MAX_VALUE;
+        float disFromDown = (closestBrightnessDown != null)
+                ? Math.abs(closestBrightnessDown.getKey() - (float) brightness)
+                : Float.MAX_VALUE;
 
-        if (ceilKey != null && floorKey != null) {
-            if (Math.abs(ceilKey - normalizedBrightness) > Math.abs(floorKey - normalizedBrightness)) {
-                return this.normalizedCharMap.get(floorKey).first();
-            } else {
-                return this.normalizedCharMap.get(ceilKey).first();
+        if (closestBrightnessUp != null && disFromUp < disFromDown) {
+            return asciiMinValue(closestBrightnessUp.getValue());
+        } else if (closestBrightnessDown != null) {
+            return asciiMinValue(closestBrightnessDown.getValue());
+        }
+        return SPACE_CHAR;
+    }
+
+    /**
+     * Adds a character to the character set.
+     *
+     * @param c The character to add.
+     */
+    public void addChar(char c) {
+        float cNormalBrightness = normalBrightness(c);
+        if (floatToCharsMap.containsKey(cNormalBrightness) &&
+                floatToCharsMap.get(cNormalBrightness).contains(c)) {
+            return;
+        }
+        if (!charBrightnessHistoryMap.containsKey(c)) {
+            charBrightnessHistoryMap.put(c, getCharBrightness(c));
+        }
+        List<Character> cBrightnessList = floatToCharsMap.get(cNormalBrightness);
+        if (cBrightnessList == null) {
+            floatToCharsMap.put(cNormalBrightness, new ArrayList<>());
+            cBrightnessList = floatToCharsMap.get(cNormalBrightness);
+        }
+        cBrightnessList.add(c);
+        if (updateMin(c) || updateMax(c)) {
+            updateNormalMap();
+        }
+    }
+
+    /**
+     * Retrieves a sorted list of all characters in the character set.
+     *
+     * @return a sorted list of characters.
+     */
+    public List<Character> GetAllCharsSorted() {
+        Collection<List<Character>> charSet = floatToCharsMap.values();
+        List<Character> flattenedList = new ArrayList<>();
+        for (List<Character> sublist : charSet) {
+            flattenedList.addAll(sublist);
+        }
+        List<Character> sortedList = new ArrayList<>(flattenedList);
+        Collections.sort(sortedList);
+        return sortedList;
+    }
+
+    /**
+     * Removes a character from the character set used by the algorithm.
+     *
+     * @param c The character to be removed from the character map.
+     */
+    public void removeChar(char c) {
+        float cNormalBrightness = normalBrightness(c);
+        if ((!floatToCharsMap.containsKey(cNormalBrightness)) ||
+                !floatToCharsMap.get(cNormalBrightness).contains(c)) {
+            return;
+        }
+        List<Character> cBrightnessList = floatToCharsMap.get(normalBrightness(c));
+        cBrightnessList.removeIf(element -> Objects.equals(element, c));
+        if (cBrightnessList.isEmpty()) {
+            floatToCharsMap.remove(normalBrightness(c), cBrightnessList);
+        }
+        if (checkMinUpdate(c) || checkMaxUpdate(c)) {
+            updateNormalMap();
+        }
+    }
+
+    /**
+     * Retrieves the character with the minimum ASCII value from a list of
+     * characters.
+     *
+     * @param characters the list of characters.
+     * @return the character with the minimum ASCII value.
+     */
+    private char asciiMinValue(List<Character> characters) {
+        char minAsciiChar = characters.get(FIRST_INDEX);
+        for (char c : characters) {
+            if (c < minAsciiChar) {
+                minAsciiChar = c;
             }
         }
+        return minAsciiChar;
+    }
 
-        if (ceilKey == null && floorKey != null) {
-            return this.normalizedCharMap.get(floorKey).first();
-        } else {
-            return this.normalizedCharMap.get(ceilKey).first();
+    /**
+     * Checks whether the maximum character brightness needs to be updated after a
+     * character removal.
+     *
+     * @param c The character being removed.
+     * @return true if the maximum brightness needs to be updated, otherwise false.
+     */
+    private boolean checkMaxUpdate(char c) {
+        if (floatToCharsMap.isEmpty()) {
+            maxCharBrightness = Float.MIN_VALUE;
+            return true;
         }
+        if (charBrightnessHistoryMap.get(c) == maxCharBrightness) {
+            maxCharBrightness = floatToCharsMap.lastKey();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Checks whether the minimum character brightness needs to be updated after a
+     * character removal.
+     *
+     * @param c The character being removed.
+     * @return true if the minimum brightness needs to be updated, otherwise false.
+     */
+    private boolean checkMinUpdate(char c) {
+        if (floatToCharsMap.isEmpty()) {
+            minCharBrightness = Float.MAX_VALUE;
+            return true;
+        }
+        if (charBrightnessHistoryMap.get(c) == minCharBrightness) {
+            maxCharBrightness = floatToCharsMap.firstKey();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Updates the minimum character brightness value if necessary after a character
+     * addition.
+     *
+     * @param c The character being added.
+     * @return true if the minimum brightness is updated, otherwise false.
+     */
+    private boolean updateMin(char c) {
+        if (charBrightnessHistoryMap.get(c) < minCharBrightness) {
+            minCharBrightness = charBrightnessHistoryMap.get(c);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Updates the maximum character brightness value if necessary after a character
+     * addition.
+     *
+     * @param c The character being added.
+     * @return true if the maximum brightness is updated, otherwise false.
+     */
+    private boolean updateMax(char c) {
+        if (charBrightnessHistoryMap.get(c) > maxCharBrightness) {
+            maxCharBrightness = charBrightnessHistoryMap.get(c);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Retrieves the brightness value of a character.
+     *
+     * @param c The character.
+     * @return the brightness value.
+     */
+    private float getCharBrightness(char c) {
+        // TODO make this static
+        if (charBrightnessHistoryMap.containsKey(c)) {
+            return charBrightnessHistoryMap.get(c);
+        }
+        boolean[][] greyArray = CharConverter.convertToBoolArray(c);
+        int count = INITIAL_COUNTER;
+        for (boolean[] booleans : greyArray) {
+            for (boolean b : booleans) {
+                if (b) {
+                    count += NEXT_COUNTER;
+                }
+            }
+        }
+        return (float) count / (greyArray.length * greyArray[FIRST_INDEX].length);
+    }
+
+    /**
+     * Calculates the normalized brightness value of a character.
+     *
+     * @param c The character.
+     * @return the normalized brightness value.
+     */
+    private float normalBrightness(char c) {
+        return (getCharBrightness(c) - minCharBrightness) /
+                (maxCharBrightness - minCharBrightness);
+
+    }
+
+    /**
+     * Updates the mapping of normalized brightness values to characters.
+     */
+    private void updateNormalMap() {
+        TreeMap<Float, List<Character>> tempMap = new TreeMap<>(Collections.reverseOrder());
+        for (Map.Entry<Float, List<Character>> entry : floatToCharsMap.entrySet()) {
+            List<Character> characterList = entry.getValue();
+            float newKey = normalBrightness(characterList.get(FIRST_INDEX));
+            tempMap.put(newKey, characterList);
+        }
+
+        floatToCharsMap.clear();
+
+        floatToCharsMap.putAll(tempMap);
+
     }
 
     public char[] getCharSet() {
@@ -53,269 +297,19 @@ public class SubImgCharMatcher {
         return l;
     }
 
-    private double calculateNormalizedBrightness(double key) {
-        double deltaBrightness = this.maxBrightness - this.minBrightness;
-        return (key - this.minBrightness) / (deltaBrightness);
-
-    }
-
-    private void initNormalizeCharMap() {
-        for (Map.Entry<Double, TreeSet<Character>> entry : charBrightnessMap.entrySet()) {
-            TreeSet<Character> currCharSet = entry.getValue();
-            for (char currentChar : currCharSet) {
-                double charBrightness = entry.getKey();
-                this.addCharHelperFunction(calculateNormalizedBrightness(charBrightness), currentChar,
-                        normalizedCharMap);
+    /**
+     * Initializes the mapping of normalized brightness values to characters.
+     */
+    private void initNormalMap() {
+        for (Map.Entry<Character, Float> pair : charBrightnessHistoryMap.entrySet()) {
+            float cNormalBrightness = normalBrightness(pair.getKey());
+            List<Character> cBrightnessList = floatToCharsMap.get(cNormalBrightness);
+            if (cBrightnessList == null) {
+                floatToCharsMap.put(cNormalBrightness, new ArrayList<>());
+                cBrightnessList = floatToCharsMap.get(cNormalBrightness);
             }
-        }
-    }
+            cBrightnessList.add(pair.getKey());
 
-    private void addCharHelperFunction(double key, char currChar, TreeMap<Double, TreeSet<Character>> tm) {
-        if (tm.get(key) != null) {
-            tm.get(key).add(currChar);
-        } else {
-            TreeSet<Character> set = new TreeSet<>();
-            set.add(currChar);
-            tm.put(key, set);
         }
-    }
-
-    public void addChar(char c) {
-        double key = getCharBrightness(c);
-        if (key < this.maxBrightness && key > this.minBrightness) {
-            addCharHelperFunction(key, c, this.charBrightnessMap);
-            this.addCharHelperFunction(calculateNormalizedBrightness(key), c, normalizedCharMap);
-        } else {
-            if (key > this.maxBrightness) {
-                this.maxBrightness = key;
-            } else {
-                this.minBrightness = key;
-            }
-            addCharHelperFunction(key, c, charBrightnessMap);
-            this.normalizedCharMap.clear();
-            initNormalizeCharMap();
-        }
-    }
-
-    public void removeChar(char c) {
-        // activate the ascii-score function and then remove the key where key is the
-        // ascii score
-        double key = getCharBrightness(c);
-
-        if (this.charBrightnessMap.get(key).size() == 1) {
-            this.charBrightnessMap.remove(key);
-            this.normalizedCharMap.remove(calculateNormalizedBrightness(key));
-            if (key == this.maxBrightness || key == this.minBrightness) {
-                if (key == this.maxBrightness) {
-                    this.maxBrightness = this.charBrightnessMap.lastKey();
-                } else {
-                    this.minBrightness = this.charBrightnessMap.firstKey();
-                }
-                this.normalizedCharMap.clear();
-                initNormalizeCharMap();
-            }
-        } else {
-            this.charBrightnessMap.get(key).remove(c);
-            this.normalizedCharMap.get(calculateNormalizedBrightness(key)).remove(c);
-        }
-    }
-
-    private double getCharBrightness(char c) {
-        double true_counter = 0;
-        boolean[][] array = CharConverter.convertToBoolArray(c);
-        for (int row = 0; row < array.length; row++) {
-            for (int col = 0; col < array[row].length; col++) {
-                if (array[row][col] == true) {
-                    true_counter++;
-                }
-            }
-        }
-        return true_counter / NORMALIZATION_FACTOR;
     }
 }
-
-// package image_char_matching;
-
-// import java.util.TreeMap;
-// import java.util.TreeSet;
-
-// import static image_char_matching.CharConverter.DEFAULT_PIXEL_RESOLUTION;
-
-// /**
-// * A class that matches a character to a brightness value.
-// */
-// public class SubImgCharMatcher {
-
-// private char[] charSet;
-// private final TreeMap<Double, TreeSet<Character>> charBrightnessMap;
-// private double minBrightness = DEFAULT_PIXEL_RESOLUTION *
-// DEFAULT_PIXEL_RESOLUTION;
-// private double maxBrightness = 0;
-
-// /**
-// * Constructor for the SubImgCharMatcher class.
-// *
-// * @param charset the character set to use
-// */
-// public SubImgCharMatcher(char[] charset) {
-// this.charSet = charset;
-// charBrightnessMap = new TreeMap<>();
-// updateBrightnessMap();
-// }
-
-// /**
-// * Getter for the char set.
-// *
-// * @return char set
-// */
-// public char[] getCharSet() {
-// return charSet;
-// }
-
-// /**
-// * Returns the character that best matches the given brightness.
-// *
-// * @param brightness the brightness to match
-// * @return char
-// */
-// public char getCharByImageBrightness(double brightness) {
-// TreeMap<Double, TreeSet<Character>> normalizedMap =
-// getNormalizingCharBrightnessMap();
-// if (normalizedMap.containsKey(brightness)) {
-// return normalizedMap.get(brightness).first();
-// }
-
-// double diff = 1;
-// double key_match = normalizedMap.lastKey();
-// for (double key : normalizedMap.keySet()) {
-// if (Math.abs(key - brightness) == diff) {
-// key_match = getMinCharForBrightness(normalizedMap, key, key_match);
-// }
-// if (Math.abs(key - brightness) < diff) {
-// diff = Math.abs(key - brightness);
-// key_match = key;
-// }
-// }
-
-// return normalizedMap.get(key_match).first();
-// }
-
-// private double getMinCharForBrightness(TreeMap<Double, TreeSet<Character>>
-// normalizedMap,
-// double key1, double key2) {
-// char char1 = normalizedMap.get(key1).first();
-// char char2 = normalizedMap.get(key2).first();
-
-// return char1 < char2 ? key1 : key2;
-// }
-
-// // sync the brightness map with the character set
-// private void updateBrightnessMap() {
-// charBrightnessMap.clear();
-// for (char c : charSet) {
-// addCharToBrightnessMap(c);
-// }
-// }
-
-// /**
-// * Adds a character to the character set.
-// *
-// * @param c the character to add
-// */
-// public void addChar(char c) {
-// if (new String(charSet).contains(String.valueOf(c))) {
-// return;
-// }
-// char[] newCharSet = new char[charSet.length + 1];
-// System.arraycopy(charSet, 0, newCharSet, 0, charSet.length);
-// newCharSet[charSet.length] = c;
-// charSet = newCharSet;
-// addCharToBrightnessMap(c);
-// }
-
-// // Add a character to the brightness map
-// private void addCharToBrightnessMap(char c) {
-// double newBrightness = getBrightness(c);
-// if (!charBrightnessMap.containsKey(newBrightness)) {
-// charBrightnessMap.put(newBrightness, new TreeSet<>());
-// }
-// charBrightnessMap.get(newBrightness).add(c);
-
-// if (newBrightness < minBrightness) {
-// minBrightness = newBrightness;
-// } else if (newBrightness > maxBrightness) {
-// maxBrightness = newBrightness;
-// }
-// }
-
-// /**
-// * Removes a character from the character set.
-// *
-// * @param c the character to remove
-// */
-// public void removeChar(char c) {
-// int index = 0;
-// while (charSet.length > index) {
-// if (charSet[index] == c) {
-// char tmp = charSet[index];
-// charSet[index] = charSet[0];
-// charSet[0] = tmp;
-
-// char[] newCharSet = new char[charSet.length - 1];
-// System.arraycopy(charSet, 1, newCharSet, 0, charSet.length - 1);
-// charSet = newCharSet;
-// removeCharFromBrightnessMap(c);
-// return;
-// }
-// index++;
-// }
-// }
-
-// // Remove a character from the brightness map
-// private void removeCharFromBrightnessMap(char c) {
-// if (charSet.length == 0) {
-// minBrightness = DEFAULT_PIXEL_RESOLUTION * DEFAULT_PIXEL_RESOLUTION;
-// maxBrightness = 0;
-// charBrightnessMap.clear();
-// return;
-// }
-
-// double brightness = getBrightness(c);
-// charBrightnessMap.get(brightness).remove(c);
-// if (charBrightnessMap.get(brightness).isEmpty()) {
-// charBrightnessMap.remove(brightness);
-// if (brightness == minBrightness) {
-// minBrightness = charBrightnessMap.firstKey();
-// } else if (brightness == maxBrightness) {
-// maxBrightness = charBrightnessMap.lastKey();
-// }
-// }
-// }
-
-// // Brightness values for a single character, based on the boolean array.
-// private int getBrightness(char c) {
-// boolean[][] charImg = CharConverter.convertToBoolArray(c);
-// int brightness = 0;
-// for (boolean[] booleans : charImg) {
-// for (boolean aBoolean : booleans) {
-// if (aBoolean) {
-// brightness++;
-// }
-// }
-// }
-// return brightness;
-// }
-
-// // returns TreeMap of brightness values and the corresponding characters
-// // after normalizing the brightness values
-// private TreeMap<Double, TreeSet<Character>> getNormalizingCharBrightnessMap()
-// {
-// TreeMap<Double, TreeSet<Character>> normalizedMap = new TreeMap<>();
-// for (double key : charBrightnessMap.keySet()) {
-// double normalizedKey = (key - minBrightness) / (maxBrightness -
-// minBrightness);
-// normalizedMap.put(normalizedKey, charBrightnessMap.get(key));
-// }
-// return normalizedMap;
-// }
-// }
