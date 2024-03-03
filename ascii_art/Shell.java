@@ -262,7 +262,7 @@ public class Shell {
 
     // The following method is used to add all characters to the charset.
     private void addAll() {
-        for (int i = MIN_ASCII_CHAR; i < MAX_ASCII_CHAR; i++) {
+        for (int i = MIN_ASCII_CHAR; i <= MAX_ASCII_CHAR; i++) {
             subImgCharMatcher.addChar((char) i);
         }
     }
